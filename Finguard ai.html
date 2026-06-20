@@ -1,0 +1,1256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>FinGuard AI — Your Money, Guarded by AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          ink: '#0F2622',
+          teal: '#16413A',
+          teal2: '#1C5048',
+          saffron: '#F3A93B',
+          saffrondark:'#D88E22',
+          mint: '#4FD9A4',
+          mintdark: '#2FAE82',
+          coral: '#FF6B5E',
+          paper: '#F3F5F0',
+          paper2: '#FFFFFF',
+          inktext: '#10231E',
+          muted: '#5B6F68',
+        },
+        fontFamily: {
+          display: ['Space Grotesk','sans-serif'],
+          body: ['Inter','sans-serif'],
+          mono: ['IBM Plex Mono','monospace'],
+        },
+        boxShadow: {
+          card: '0 1px 2px rgba(15,38,34,0.06), 0 8px 24px -8px rgba(15,38,34,0.10)',
+          cardlg: '0 4px 8px rgba(15,38,34,0.08), 0 24px 48px -16px rgba(15,38,34,0.18)',
+        }
+      }
+    }
+  }
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+  html { scroll-behavior: smooth; }
+  body { background: #F3F5F0; color: #10231E; font-family:'Inter',sans-serif; }
+  .font-display { font-family:'Space Grotesk',sans-serif; }
+  .font-mono { font-family:'IBM Plex Mono',monospace; }
+
+  input[type=range] {
+    -webkit-appearance: none; appearance: none;    width: 100%; height: 6px; border-radius: 999px;
+    background: linear-gradient(to right, #4FD9A4 var(--fill,50%), #E3E8E0 var(--fill,50%));
+    outline: none;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #16413A; border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer; margin-top:-1px;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 20px; height: 20px; border-radius: 50%;
+    background: #16413A; border: 3px solid #fff;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3); cursor: pointer;
+  }
+
+  .nav-pill { transition: all .18s ease; }
+  .nav-pill[data-active="true"] { background: #16413A; color: #fff; }
+  .nav-pill[data-active="true"] .nav-ic { color: #4FD9A4; }
+  .nav-pill:not([data-active="true"]):hover { background: rgba(22,65,58,0.07); }
+
+  .app-panel { animation: fadein .35s ease; }
+  @keyframes fadein { from { opacity:0; transform: translateY(6px); } to { opacity:1; transform:none; } }
+
+  .chip { transition: all .15s ease; }
+  .chip:hover { border-color:#16413A; background:#16413A; color:#fff; }
+
+  .scrollbar-thin::-webkit-scrollbar { height:6px; width:6px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background:#CBD5CC; border-radius:99px; }
+
+  .typing-dot { animation: blink 1.2s infinite; }
+  .typing-dot:nth-child(2){ animation-delay:.2s; }
+  .typing-dot:nth-child(3){ animation-delay:.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior:auto; }
+    .app-panel { animation:none; }
+    * { transition: none !important; }
+  }
+
+  .focus-ring:focus-visible { outline:2px solid #4FD9A4; outline-offset:2px; }
+  .gauge-track { stroke: #E3E8E0; }
+
+  .hero-glow {
+    position: absolute; inset: 0; opacity: 0.5;
+    background: radial-gradient(circle at 20% 30%, rgba(79,217,164,0.25), transparent 45%),
+                radial-gradient(circle at 80% 70%, rgba(243,169,59,0.18), transparent 45%);
+    filter: blur(40px);
+    pointer-events: none;  }
+
+  .module-card { transition: transform .25s ease, box-shadow .25s ease; }
+  .module-card:hover { transform: translateY(-4px); box-shadow: 0 12px 32px -12px rgba(15,38,34,0.25); }
+
+  .msg-user { background: #16413A; color: #fff; border-radius: 18px 18px 4px 18px; }
+  .msg-bot { background: #fff; color: #10231E; border-radius: 18px 18px 18px 4px; border: 1px solid rgba(0,0,0,0.05); }
+
+  .pulse-dot {
+    width: 8px; height: 8px; border-radius: 50%; background: #4FD9A4;
+    box-shadow: 0 0 0 0 rgba(79,217,164,0.7);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(79,217,164,0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(79,217,164,0); }
+    100% { box-shadow: 0 0 0 0 rgba(79,217,164,0); }
+  }
+
+  .risk-bar { transition: width 1s cubic-bezier(.4,0,.2,1); }
+
+  .tab-underline { position: relative; }
+  .tab-underline::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -2px;
+    height: 2px; background: #F3A93B; transform: scaleX(0); transition: transform .25s ease;
+  }
+  .tab-underline:hover::after { transform: scaleX(1); }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #4FD9A4 0%, #F3A93B 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .float-card {
+    animation: float 6s ease-in-out infinite;
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-8px); }
+  }
+
+  .shimmer {
+    background: linear-gradient(90deg, transparent, rgba(79,217,164,0.15), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2.5s infinite;
+  }
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }    100% { background-position: 200% 0; }
+  }
+
+  .mobile-menu { transition: transform .3s ease, opacity .3s ease; }
+  .mobile-menu.hidden { transform: translateY(-10px); opacity: 0; pointer-events: none; }
+</style>
+</head>
+<body class="antialiased">
+
+<!-- ============ MARKETING NAV ============ -->
+<header class="sticky top-0 z-50 bg-paper/90 backdrop-blur border-b border-black/5">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 h-16 flex items-center justify-between">
+    <a href="#top" class="flex items-center gap-2.5">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none"><path d="M12 2.5 L19.5 5.5 V11.2 C19.5 16 16 19.6 12 21 C8 19.6 4.5 16 4.5 11.2 V5.5 Z" fill="#16413A"/><path d="M8.7 11.6 L11 14 L15.6 9" stroke="#4FD9A4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      <span class="font-display font-700 text-lg tracking-tight text-ink">FinGuard <span class="text-saffrondark">AI</span></span>
+    </a>
+    <nav class="hidden md:flex items-center gap-7 text-sm font-medium text-teal">
+      <a href="#modules" class="tab-underline hover:text-saffrondark transition-colors">Modules</a>
+      <a href="#how" class="tab-underline hover:text-saffrondark transition-colors">How it works</a>
+      <a href="#app" class="tab-underline hover:text-saffrondark transition-colors">Live demo</a>
+      <a href="#pricing" class="tab-underline hover:text-saffrondark transition-colors">Pricing</a>
+    </nav>
+    <div class="flex items-center gap-3">
+      <a href="#app" class="hidden sm:inline-flex bg-ink text-white text-sm font-semibold px-4 py-2.5 rounded-full hover:bg-teal transition-colors focus-ring">Launch demo</a>
+      <button id="mobile-menu-btn" class="md:hidden w-10 h-10 flex items-center justify-center rounded-full hover:bg-black/5" aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16413A" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+  </div>
+  <div id="mobile-menu" class="mobile-menu hidden md:hidden bg-paper2 border-t border-black/5">
+    <nav class="flex flex-col p-4 gap-2 text-sm font-medium text-teal">
+      <a href="#modules" class="py-2 px-3 rounded-lg hover:bg-black/5">Modules</a>
+      <a href="#how" class="py-2 px-3 rounded-lg hover:bg-black/5">How it works</a>
+      <a href="#app" class="py-2 px-3 rounded-lg hover:bg-black/5">Live demo</a>
+      <a href="#pricing" class="py-2 px-3 rounded-lg hover:bg-black/5">Pricing</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ============ HERO ============ -->
+<section id="top" class="relative bg-ink overflow-hidden">
+  <div class="hero-glow"></div>
+  <div class="max-w-7xl mx-auto px-5 md:px-8 pt-16 pb-20 md:pt-24 md:pb-28 relative">
+    <div class="grid md:grid-cols-[1.1fr_0.9fr] gap-12 items-center">
+      <div>
+        <span class="inline-flex items-center gap-2 text-xs font-mono font-medium text-mint bg-white/5 border border-white/10 rounded-full px-3 py-1.5">
+          <span class="pulse-dot"></span> AI-first financial safety, built for India
+        </span>
+        <h1 class="font-display text-white font-700 text-4xl md:text-6xl leading-[1.05] mt-5 tracking-tight">
+          Your money,<br/><span class="gradient-text">guarded by AI.</span>        </h1>
+        <p class="text-white/70 text-base md:text-lg mt-5 max-w-lg leading-relaxed">
+          FinGuard reads your spending, spots the scam texts before you tap them, and answers
+          the question every paycheck raises: <span class="text-white">can I actually afford this?</span>
+        </p>
+        <div class="flex flex-wrap items-center gap-3 mt-8">
+          <a href="#app" class="bg-saffron text-ink font-semibold text-sm px-5 py-3 rounded-full hover:bg-white transition-colors focus-ring">Try the live demo</a>
+          <a href="#modules" class="text-white/80 font-medium text-sm px-5 py-3 rounded-full border border-white/20 hover:border-white/50 transition-colors focus-ring">See what it does</a>
+        </div>
+        <div class="flex items-center gap-6 mt-10 text-white/60 text-xs font-mono">
+          <div class="flex items-center gap-2"><span class="text-mint">✓</span> UPI-aware</div>
+          <div class="flex items-center gap-2"><span class="text-mint">✓</span> Bank-grade security</div>
+          <div class="flex items-center gap-2"><span class="text-mint">✓</span> 10+ languages</div>
+        </div>
+      </div>
+      <div class="justify-self-center relative">
+        <div class="relative w-64 h-64 md:w-80 md:h-80 float-card" id="hero-gauge-wrap">
+          <svg viewBox="0 0 200 200" class="w-full h-full -rotate-90">
+            <circle cx="100" cy="100" r="86" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="14"/>
+            <circle id="hero-gauge-arc" cx="100" cy="100" r="86" fill="none" stroke="#4FD9A4" stroke-width="14" stroke-linecap="round" stroke-dasharray="540" stroke-dashoffset="540"/>
+          </svg>
+          <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+            <span class="font-mono text-xs text-mint tracking-wide">GUARD SCORE</span>
+            <span id="hero-gauge-num" class="font-display text-white font-700 text-5xl mt-1">0</span>
+            <span class="text-white/60 text-xs mt-1">Financial health · this month</span>
+          </div>
+        </div>
+        <!-- Floating stat cards -->
+        <div class="hidden md:block absolute -left-16 top-10 bg-white rounded-xl shadow-cardlg p-3 w-40 float-card" style="animation-delay:-2s">
+          <p class="text-[10px] font-mono text-muted">SCAMS BLOCKED</p>
+          <p class="font-display font-700 text-2xl text-ink mt-1">2,847</p>
+          <p class="text-[10px] text-mintdark font-semibold">+12% this week</p>
+        </div>
+        <div class="hidden md:block absolute -right-12 bottom-8 bg-white rounded-xl shadow-cardlg p-3 w-44 float-card" style="animation-delay:-4s">
+          <p class="text-[10px] font-mono text-muted">AVG. SAVED / USER</p>
+          <p class="font-display font-700 text-2xl text-ink mt-1">₹8,420</p>
+          <p class="text-[10px] text-mintdark font-semibold">per month</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CONTEXT STRIP ============ -->
+<section class="bg-teal text-white/90">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-6 flex flex-wrap gap-x-10 gap-y-3 text-sm font-medium items-center justify-center md:justify-between">
+    <p class="text-white/60">Built for a country where money now moves through a phone screen, not a bank counter —</p>
+    <div class="flex gap-8 font-mono text-xs text-mint/90 flex-wrap justify-center">
+      <span>UPI-aware categorisation</span>
+      <span>Plain-language explanations</span>      <span>No jargon, ever</span>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MODULE OVERVIEW ============ -->
+<section id="modules" class="max-w-7xl mx-auto px-5 md:px-8 py-20 md:py-28">
+  <div class="max-w-xl">
+    <span class="font-mono text-xs text-mintdark uppercase tracking-wider">One assistant, six jobs</span>
+    <h2 class="font-display text-ink font-700 text-3xl md:text-4xl mt-3 tracking-tight">Everything that touches your money, in one place.</h2>
+    <p class="text-muted mt-3 leading-relaxed">Each card below opens straight into the matching tool in the live demo — try it with real-feeling data, not just screenshots.</p>
+  </div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-10" id="module-cards"></div>
+</section>
+
+<!-- ============ HOW IT WORKS ============ -->
+<section id="how" class="bg-paper2 border-y border-black/5">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-20 md:py-24">
+    <span class="font-mono text-xs text-mintdark uppercase tracking-wider">How a question gets answered</span>
+    <h2 class="font-display text-ink font-700 text-3xl md:text-4xl mt-3 tracking-tight max-w-2xl">From "can I afford this?" to an answer you can act on.</h2>
+    <div class="grid md:grid-cols-4 gap-6 mt-12">
+      <div class="border-t-2 border-teal pt-5">
+        <p class="font-mono text-xs text-saffrondark">Step 1</p>
+        <h3 class="font-display font-600 text-lg mt-2">You ask, in your words</h3>
+        <p class="text-muted text-sm mt-2 leading-relaxed">Type a question, paste a suspicious text, or just open your dashboard — no forms to fill first.</p>
+      </div>
+      <div class="border-t-2 border-teal pt-5">
+        <p class="font-mono text-xs text-saffrondark">Step 2</p>
+        <h3 class="font-display font-600 text-lg mt-2">FinGuard reads your data</h3>
+        <p class="text-muted text-sm mt-2 leading-relaxed">It checks income, spending, savings goals and habits already on file — nothing re-typed.</p>
+      </div>
+      <div class="border-t-2 border-teal pt-5">
+        <p class="font-mono text-xs text-saffrondark">Step 3</p>
+        <h3 class="font-display font-600 text-lg mt-2">It shows the reasoning</h3>
+        <p class="text-muted text-sm mt-2 leading-relaxed">Not just a verdict — the numbers behind it, so you can disagree with the AI if you want to.</p>
+      </div>
+      <div class="border-t-2 border-teal pt-5">
+        <p class="font-mono text-xs text-saffrondark">Step 4</p>
+        <h3 class="font-display font-600 text-lg mt-2">You decide, guided</h3>
+        <p class="text-muted text-sm mt-2 leading-relaxed">A clear next step — wait, split the payment, flag the message — never a silent black box.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ APP SHELL ============ -->
+<section id="app" class="max-w-7xl mx-auto px-5 md:px-8 py-16 md:py-20">
+  <div class="mb-8">
+    <span class="font-mono text-xs text-mintdark uppercase tracking-wider">Live demo</span>
+    <h2 class="font-display text-ink font-700 text-3xl md:text-4xl mt-3 tracking-tight">Try FinGuard as Aditi would.</h2>    <p class="text-muted mt-2 max-w-xl leading-relaxed">This demo runs on a sample account so every screen has real-feeling numbers to react to. Nothing here touches an actual bank account.</p>
+  </div>
+
+  <!-- mobile tab strip -->
+  <div class="md:hidden flex gap-2 overflow-x-auto scrollbar-thin pb-3 -mx-5 px-5">
+    <div id="mobile-nav" class="flex gap-2"></div>
+  </div>
+
+  <div class="flex gap-6 mt-2 md:mt-0">
+    <!-- desktop sidebar -->
+    <aside class="hidden md:flex md:flex-col w-60 shrink-0 bg-paper2 rounded-2xl shadow-card p-3 gap-1 h-max sticky top-24">
+      <div id="desktop-nav" class="flex flex-col gap-1"></div>
+      <div class="mt-3 pt-3 border-t border-black/5 px-3 pb-2">
+        <p class="text-xs text-muted leading-relaxed">Signed in as <span class="font-semibold text-inktext">Aditi Sharma</span> · Demo account</p>
+      </div>
+    </aside>
+
+    <!-- panels -->
+    <div class="flex-1 min-w-0">
+
+      <!-- ===== DASHBOARD ===== -->
+      <div id="panel-dashboard" class="app-panel space-y-5">
+        <div class="grid md:grid-cols-3 gap-5">
+          <div class="md:col-span-2 bg-paper2 rounded-2xl shadow-card p-6">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-muted text-sm">This month's income</p>
+                <p class="font-display font-700 text-3xl mt-1">₹65,000</p>
+              </div>
+              <div class="text-right">
+                <p class="text-muted text-sm">Spent so far</p>
+                <p id="dash-spent" class="font-display font-700 text-3xl mt-1 text-coral">₹0</p>
+              </div>
+            </div>
+            <div class="mt-6">
+              <canvas id="chart-spend" height="160"></canvas>
+            </div>
+          </div>
+          <div class="bg-paper2 rounded-2xl shadow-card p-6 flex flex-col items-center justify-center">
+            <div class="relative w-36 h-36">
+              <svg viewBox="0 0 120 120" class="w-full h-full -rotate-90">
+                <circle cx="60" cy="60" r="50" fill="none" class="gauge-track" stroke-width="10"/>
+                <circle id="gauge-health-arc" cx="60" cy="60" r="50" fill="none" stroke="#4FD9A4" stroke-width="10" stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span id="gauge-health-num" class="font-display font-700 text-2xl">0</span>
+                <span class="text-[10px] text-muted font-mono">GUARD SCORE</span>
+              </div>
+            </div>
+            <p class="text-sm text-muted mt-3 text-center">Financial health this month</p>          </div>
+        </div>
+
+        <div class="grid md:grid-cols-3 gap-5">
+          <div class="md:col-span-2 bg-paper2 rounded-2xl shadow-card p-6">
+            <div class="flex items-center justify-between mb-3">
+              <h3 class="font-display font-600 text-lg">Recent transactions</h3>
+              <span class="text-xs font-mono text-muted">Auto-categorised</span>
+            </div>
+            <div id="txn-list" class="divide-y divide-black/5 max-h-80 overflow-y-auto scrollbar-thin"></div>
+          </div>
+          <div class="bg-paper2 rounded-2xl shadow-card p-6 flex flex-col">
+            <h3 class="font-display font-600 text-lg">Emergency fund</h3>
+            <p class="text-sm text-muted mt-1">Goal: ₹3,00,000</p>
+            <div class="mt-4">
+              <div class="h-2.5 rounded-full bg-black/5 overflow-hidden">
+                <div id="emergency-bar" class="h-full bg-mintdark rounded-full" style="width:0%"></div>
+              </div>
+              <p class="text-sm mt-2 font-mono">₹<span id="emergency-saved">0</span> <span class="text-muted">saved · <span id="emergency-pct">0</span>%</span></p>
+            </div>
+            <p class="text-xs text-muted mt-4 leading-relaxed">At your current SIP of ₹4,500/month, you'll reach this goal in <span class="text-inktext font-semibold">~26 months</span>.</p>
+            <div class="mt-auto pt-4">
+              <div class="bg-paper rounded-xl p-3">
+                <p class="text-xs text-muted">AI Insight</p>
+                <p class="text-sm text-inktext mt-1 leading-relaxed">You're on track. A small ₹500 bump to your SIP gets you there 3 months sooner.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="bg-ink rounded-2xl shadow-card p-6 md:p-7">
+          <h3 class="font-display font-600 text-lg text-white">Can I afford it?</h3>
+          <p class="text-white/60 text-sm mt-1">Ask about any purchase — FinGuard checks it against this month's real numbers.</p>
+          <div class="flex flex-col sm:flex-row gap-3 mt-4">
+            <input id="afford-input" type="text" placeholder="e.g. Can I afford a ₹25,000 phone this month?"
+              class="flex-1 bg-white/10 text-white placeholder-white/40 rounded-xl px-4 py-3 text-sm focus-ring outline-none border border-white/10 focus:border-mint/60" />
+            <button id="afford-btn" class="bg-saffron text-ink font-semibold text-sm px-5 py-3 rounded-xl hover:bg-mint transition-colors focus-ring shrink-0">Check affordability</button>
+          </div>
+          <div class="flex flex-wrap gap-2 mt-3">
+            <button class="afford-chip chip text-xs text-white/70 border border-white/15 rounded-full px-3 py-1.5" data-amt="25000">₹25,000 phone</button>
+            <button class="afford-chip chip text-xs text-white/70 border border-white/15 rounded-full px-3 py-1.5" data-amt="60000">₹60,000 laptop</button>
+            <button class="afford-chip chip text-xs text-white/70 border border-white/15 rounded-full px-3 py-1.5" data-amt="8000">₹8,000 weekend trip</button>
+            <button class="afford-chip chip text-xs text-white/70 border border-white/15 rounded-full px-3 py-1.5" data-amt="15000">₹15,000 TV</button>
+          </div>
+          <div id="afford-result" class="hidden mt-5 bg-white/5 border border-white/10 rounded-xl p-5"></div>
+        </div>
+      </div>
+
+      <!-- ===== SCAMSHIELD ===== -->
+      <div id="panel-scamshield" class="app-panel hidden space-y-5">        <div class="bg-paper2 rounded-2xl shadow-card p-6">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-coral/10 flex items-center justify-center shrink-0">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FF6B5E" stroke-width="2"><path d="M12 2L3 7v5c0 5 3.5 9.5 9 11 5.5-1.5 9-6 9-11V7l-9-5z" stroke-linejoin="round"/></svg>
+            </div>
+            <div>
+              <h3 class="font-display font-600 text-xl">ScamShield AI</h3>
+              <p class="text-muted text-sm mt-1">Paste any SMS, WhatsApp message, or email. FinGuard scores the risk and explains why.</p>
+            </div>
+          </div>
+          <textarea id="scam-input" rows="4" placeholder="Paste the suspicious message here…"
+            class="w-full mt-4 bg-paper rounded-xl p-4 text-sm focus-ring outline-none border border-black/10 focus:border-teal resize-none"></textarea>
+          <div class="flex flex-wrap items-center justify-between gap-3 mt-3">
+            <div class="flex flex-wrap gap-2" id="scam-samples"></div>
+            <button id="scam-btn" class="bg-ink text-white font-semibold text-sm px-5 py-3 rounded-xl hover:bg-teal transition-colors focus-ring">Analyse message</button>
+          </div>
+        </div>
+        <div id="scam-result" class="hidden bg-paper2 rounded-2xl shadow-card p-6"></div>
+
+        <div class="bg-paper2 rounded-2xl shadow-card p-6">
+          <h3 class="font-display font-600 text-lg">Scams blocked this week</h3>
+          <div class="grid grid-cols-3 gap-4 mt-4">
+            <div class="text-center p-4 bg-paper rounded-xl">
+              <p class="font-display font-700 text-2xl text-ink">142</p>
+              <p class="text-xs text-muted mt-1">Phishing SMS</p>
+            </div>
+            <div class="text-center p-4 bg-paper rounded-xl">
+              <p class="font-display font-700 text-2xl text-ink">87</p>
+              <p class="text-xs text-muted mt-1">Fake UPI calls</p>
+            </div>
+            <div class="text-center p-4 bg-paper rounded-xl">
+              <p class="font-display font-700 text-2xl text-ink">₹4.2L</p>
+              <p class="text-xs text-muted mt-1">Money saved</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== ADVISOR ===== -->
+      <div id="panel-advisor" class="app-panel hidden">
+        <div class="bg-paper2 rounded-2xl shadow-card flex flex-col h-[640px]">
+          <div class="px-6 py-4 border-b border-black/5 flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full bg-ink flex items-center justify-center shrink-0">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 2.5 L19.5 5.5 V11.2 C19.5 16 16 19.6 12 21 C8 19.6 4.5 16 4.5 11.2 V5.5 Z" fill="#4FD9A4"/></svg>
+            </div>
+            <div class="flex-1">
+              <p class="font-display font-600">FinGuard Advisor</p>
+              <p class="text-xs text-muted flex items-center gap-1.5"><span class="pulse-dot"></span> Knows your income, spending and goals</p>
+            </div>
+            <button id="chat-clear" class="text-xs text-muted hover:text-coral transition-colors">Clear</button>          </div>
+          <div id="chat-log" class="flex-1 overflow-y-auto scrollbar-thin px-6 py-5 space-y-4"></div>
+          <div class="px-6 pb-3 flex flex-wrap gap-2" id="chat-suggestions"></div>
+          <div class="px-6 pb-6 pt-2 flex gap-3">
+            <input id="chat-input" type="text" placeholder="Ask about a purchase, an SIP, or your budget…"
+              class="flex-1 bg-paper rounded-xl px-4 py-3 text-sm focus-ring outline-none border border-black/10 focus:border-teal" />
+            <button id="chat-send" class="bg-ink text-white w-12 h-12 rounded-xl flex items-center justify-center hover:bg-teal transition-colors focus-ring shrink-0" aria-label="Send">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M3 11l18-8-8 18-2-8-8-2z" stroke="#fff" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/></svg>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== CREDIT SCORE ===== -->
+      <div id="panel-credit" class="app-panel hidden space-y-5">
+        <div class="grid md:grid-cols-[1fr_300px] gap-5">
+          <div class="bg-paper2 rounded-2xl shadow-card p-6">
+            <h3 class="font-display font-600 text-xl">Credit Score Builder</h3>
+            <p class="text-muted text-sm mt-1">No loan history yet? These habits build an alternative score instead.</p>
+            <div class="space-y-6 mt-6" id="credit-sliders"></div>
+          </div>
+          <div class="bg-paper2 rounded-2xl shadow-card p-6 flex flex-col items-center justify-center">
+            <div class="relative w-44 h-44">
+              <svg viewBox="0 0 140 140" class="w-full h-full -rotate-90">
+                <circle cx="70" cy="70" r="60" fill="none" class="gauge-track" stroke-width="12"/>
+                <circle id="credit-arc" cx="70" cy="70" r="60" fill="none" stroke="#4FD9A4" stroke-width="12" stroke-linecap="round" stroke-dasharray="377" stroke-dashoffset="377"/>
+              </svg>
+              <div class="absolute inset-0 flex flex-col items-center justify-center">
+                <span id="credit-num" class="font-display font-700 text-4xl">0</span>
+                <span class="text-[10px] text-muted font-mono">CREDIT SCORE</span>
+              </div>
+            </div>
+            <p id="credit-label" class="text-sm font-semibold mt-3 text-mintdark">Building</p>
+            <p class="text-xs text-muted mt-1 text-center px-4">Based on your alternative financial behaviour</p>
+            <div class="mt-4 w-full bg-paper rounded-xl p-3">
+              <p class="text-xs text-muted">Tip</p>
+              <p class="text-xs text-inktext mt-1 leading-relaxed">Consistent rent payments + low credit utilisation = faster score growth.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== BUDGET ===== -->
+      <div id="panel-budget" class="app-panel hidden space-y-5">
+        <div class="bg-paper2 rounded-2xl shadow-card p-6">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <h3 class="font-display font-600 text-xl">Monthly Budget</h3>
+              <p class="text-muted text-sm mt-1">How your ₹65,000 is allocated</p>
+            </div>            <button id="budget-reset" class="text-xs font-mono text-saffrondark hover:text-ink transition-colors">Reset to default</button>
+          </div>
+          <div class="grid md:grid-cols-2 gap-6 mt-6">
+            <div id="budget-list" class="space-y-4"></div>
+            <div class="flex items-center justify-center">
+              <canvas id="chart-budget" width="280" height="280"></canvas>
+            </div>
+          </div>
+          <div id="budget-summary" class="mt-6 bg-paper rounded-xl p-4 flex items-center justify-between flex-wrap gap-3"></div>
+        </div>
+      </div>
+
+      <!-- ===== GOALS ===== -->
+      <div id="panel-goals" class="app-panel hidden space-y-5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="font-display font-600 text-xl">Your Goals</h3>
+            <p class="text-muted text-sm mt-1">Track what you're saving for</p>
+          </div>
+          <button id="add-goal-btn" class="bg-ink text-white text-sm font-semibold px-4 py-2.5 rounded-full hover:bg-teal transition-colors focus-ring flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14" stroke-linecap="round"/></svg>
+            New goal
+          </button>
+        </div>
+        <div id="goals-list" class="grid md:grid-cols-2 gap-5"></div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ PRICING ============ -->
+<section id="pricing" class="bg-paper2 border-t border-black/5">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-20 md:py-24">
+    <div class="text-center max-w-2xl mx-auto">
+      <span class="font-mono text-xs text-mintdark uppercase tracking-wider">Pricing</span>
+      <h2 class="font-display text-ink font-700 text-3xl md:text-4xl mt-3 tracking-tight">Simple, honest pricing.</h2>
+      <p class="text-muted mt-3">Start free. Upgrade when your money starts growing.</p>
+    </div>
+    <div class="grid md:grid-cols-3 gap-5 mt-12 max-w-5xl mx-auto">
+      <div class="bg-paper rounded-2xl p-6 border border-black/5">
+        <p class="font-mono text-xs text-muted">FREE</p>
+        <p class="font-display font-700 text-4xl mt-2">₹0</p>
+        <p class="text-xs text-muted mt-1">forever</p>
+        <ul class="mt-6 space-y-2 text-sm">
+          <li class="flex items-center gap-2"><span class="text-mint">✓</span> Dashboard & transactions</li>
+          <li class="flex items-center gap-2"><span class="text-mint">✓</span> 5 scam checks / month</li>
+          <li class="flex items-center gap-2"><span class="text-mint">✓</span> Basic advisor</li>
+        </ul>
+        <button class="w-full mt-6 py-2.5 rounded-full border border-ink text-ink font-semibold text-sm hover:bg-ink hover:text-white transition-colors">Get started</button>      </div>
+      <div class="bg-ink rounded-2xl p-6 text-white relative shadow-cardlg scale-105">
+        <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-saffron text-ink text-xs font-semibold px-3 py-1 rounded-full">Most popular</span>
+        <p class="font-mono text-xs text-mint">PRO</p>
+        <p class="font-display font-700 text-4xl mt-2">₹149<span class="text-base font-normal text-white/60">/mo</span></p>
+        <p class="text-xs text-white/60 mt-1">billed yearly</p>
+        <ul class="mt-6 space-y-2 text-sm">
+          <li class="flex items-center gap-2"><span class="text-mint">✓</span> Unlimited scam checks</li>
+          <li class="flex items-center gap-2"><span class="text-mint">✓</span> Full AI advisor</li>
+          <li class="flex items-center gap-2"><span class="text-mint">✓</span> Credit score builder</li>
+          <li class="flex items-center gap-2"><span class="text-mint">✓</span> Goal tracking & insights</li>
+        </ul>
+        <button class="w-full mt-6 py-2.5 rounded-full bg-saffron text-ink font-semibold text-sm hover:bg-white transition-colors">Start 14-day trial</button>
+      </div>
+      <div class="bg-paper rounded-2xl p-6 border border-black/5">
+        <p class="font-mono text-xs text-muted">FAMILY</p>
+        <p class="font-display font-700 text-4xl mt-2">₹299<span class="text-base font-normal text-muted">/mo</span></p>
+        <p class="text-xs text-muted mt-1">up to 5 members</p>
+        <ul class="mt-6 space-y-2 text-sm">
+          <li class="flex items-center gap-2"><span class="text-mint">✓</span> Everything in Pro</li>
+          <li class="flex items-center gap-2"><span class="text-mint">✓</span> Shared family goals</li>
+          <li class="flex items-center gap-2"><span class="text-mint">✓</span> Parental scam alerts</li>
+          <li class="flex items-center gap-2"><span class="text-mint">✓</span> Priority support</li>
+        </ul>
+        <button class="w-full mt-6 py-2.5 rounded-full border border-ink text-ink font-semibold text-sm hover:bg-ink hover:text-white transition-colors">Choose Family</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="bg-ink text-white/70">
+  <div class="max-w-7xl mx-auto px-5 md:px-8 py-12">
+    <div class="grid md:grid-cols-4 gap-8">
+      <div>
+        <div class="flex items-center gap-2.5">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M12 2.5 L19.5 5.5 V11.2 C19.5 16 16 19.6 12 21 C8 19.6 4.5 16 4.5 11.2 V5.5 Z" fill="#4FD9A4"/></svg>
+          <span class="font-display font-700 text-white">FinGuard AI</span>
+        </div>
+        <p class="text-sm mt-3 leading-relaxed">Your money, guarded by AI. Built in India, for India.</p>
+      </div>
+      <div>
+        <p class="font-semibold text-white text-sm mb-3">Product</p>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#modules" class="hover:text-mint transition-colors">Modules</a></li>
+          <li><a href="#how" class="hover:text-mint transition-colors">How it works</a></li>
+          <li><a href="#pricing" class="hover:text-mint transition-colors">Pricing</a></li>
+        </ul>
+      </div>
+      <div>        <p class="font-semibold text-white text-sm mb-3">Company</p>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#" class="hover:text-mint transition-colors">About</a></li>
+          <li><a href="#" class="hover:text-mint transition-colors">Security</a></li>
+          <li><a href="#" class="hover:text-mint transition-colors">Careers</a></li>
+        </ul>
+      </div>
+      <div>
+        <p class="font-semibold text-white text-sm mb-3">Legal</p>
+        <ul class="space-y-2 text-sm">
+          <li><a href="#" class="hover:text-mint transition-colors">Privacy</a></li>
+          <li><a href="#" class="hover:text-mint transition-colors">Terms</a></li>
+          <li><a href="#" class="hover:text-mint transition-colors">RBI compliance</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="border-t border-white/10 mt-10 pt-6 text-xs flex flex-wrap items-center justify-between gap-3">
+      <p>© 2026 FinGuard AI. All rights reserved.</p>
+      <p class="font-mono">Made with <span class="text-mint">♥</span> in Bengaluru</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ================== DATA ================== */
+const MODULES = [
+  { id:'dashboard', title:'Smart Dashboard', desc:'Income, spend, and health — all in one glance.', color:'mint', icon:'chart' },
+  { id:'scamshield', title:'ScamShield AI', desc:'Paste any message. Get a risk score in seconds.', color:'coral', icon:'shield' },
+  { id:'advisor', title:'FinGuard Advisor', desc:'Ask anything about your money, in plain words.', color:'saffron', icon:'chat' },
+  { id:'credit', title:'Credit Builder', desc:'Build a score without a credit card or loan.', color:'teal', icon:'star' },
+  { id:'budget', title:'Budget Planner', desc:'Auto-allocated budgets that match your habits.', color:'ink', icon:'pie' },
+  { id:'goals', title:'Goals & Savings', desc:'Track what you\'re saving for, with AI nudges.', color:'mintdark', icon:'target' },
+];
+
+const ICONS = {
+  chart: '<path d="M3 3v18h18" stroke-linecap="round"/><path d="M7 14l4-4 4 4 5-6" stroke-linecap="round" stroke-linejoin="round"/>',
+  shield: '<path d="M12 2L3 7v5c0 5 3.5 9.5 9 11 5.5-1.5 9-6 9-11V7l-9-5z" stroke-linejoin="round"/>',
+  chat: '<path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z" stroke-linejoin="round"/>',
+  star: '<path d="M12 2l3 7h7l-5.5 4 2 7-6.5-4-6.5 4 2-7L2 9h7z" stroke-linejoin="round"/>',
+  pie: '<circle cx="12" cy="12" r="9"/><path d="M12 3v9l6.5 6.5" stroke-linecap="round"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+};
+
+const TXNS = [
+  { name:'Swiggy', cat:'Food', amt:420, icon:'🍛', time:'2h ago' },
+  { name:'Uber', cat:'Transport', amt:285, icon:'🚗', time:'5h ago' },
+  { name:'Salary — Acme Corp', cat:'Income', amt:65000, icon:'💼', time:'Jun 1', income:true },
+  { name:'Netflix', cat:'Entertainment', amt:649, icon:'🎬', time:'Jun 12' },
+  { name:'BigBasket', cat:'Groceries', amt:1847, icon:'🛒', time:'Jun 11' },
+  { name:'Electricity bill', cat:'Utilities', amt:2150, icon:'💡', time:'Jun 10' },  { name:'Amazon', cat:'Shopping', amt:3299, icon:'📦', time:'Jun 9' },
+  { name:'Cred rent payment', cat:'Housing', amt:22000, icon:'🏠', time:'Jun 5' },
+  { name:'SIP — Parag Parikh', cat:'Investment', amt:4500, icon:'📈', time:'Jun 5' },
+];
+
+const SCAM_SAMPLES = [
+  'Your SBI A/C has been blocked. Click http://sbi-verify.in to unblock immediately.',
+  'Congratulations! You won ₹5,00,000 in Amazon lottery. Call +91-9XXXXXXXXX to claim.',
+  'Hi mom, I lost my phone. Please send ₹10,000 to this new number urgently.',
+  'Your KYC is pending. Update at https://hdfc-kyc.net or account will be frozen.',
+];
+
+const CREDIT_FACTORS = [
+  { key:'rent', label:'Rent paid on time', max:12, unit:'months', val:8 },
+  { key:'util', label:'Credit utilisation', max:100, unit:'%', val:32, invert:true },
+  { key:'sip', label:'Monthly SIPs', max:5, unit:'active', val:2 },
+  { key:'age', label:'Oldest account age', max:10, unit:'years', val:3 },
+  { key:'emi', label:'EMIs paid without miss', max:24, unit:'months', val:14 },
+];
+
+const GOALS = [
+  { name:'Emergency fund', target:300000, saved:184500, color:'mint', icon:'🛡️' },
+  { name:'Goa trip', target:45000, saved:28000, color:'saffron', icon:'🏖️' },
+  { name:'New MacBook', target:140000, saved:62000, color:'coral', icon:'💻' },
+  { name:'Wedding fund', target:800000, saved:120000, color:'teal', icon:'💍' },
+];
+
+const DEFAULT_BUDGET = [
+  { cat:'Housing', amt:22000, color:'#16413A' },
+  { cat:'Food', amt:8000, color:'#F3A93B' },
+  { cat:'Transport', amt:4000, color:'#4FD9A4' },
+  { cat:'Shopping', amt:6000, color:'#FF6B5E' },
+  { cat:'Utilities', amt:3500, color:'#2FAE82' },
+  { cat:'Entertainment', amt:2500, color:'#D88E22' },
+  { cat:'Investments', amt:12000, color:'#1C5048' },
+  { cat:'Savings', amt:7000, color:'#5B6F68' },
+];
+
+/* ================== STATE ================== */
+const state = {
+  activePanel: 'dashboard',
+  income: 65000,
+  spent: 0,
+  guardScore: 78,
+  creditScore: 0,
+  budget: JSON.parse(JSON.stringify(DEFAULT_BUDGET)),
+  goals: JSON.parse(JSON.stringify(GOALS)),
+};
+state.spent = TXNS.filter(t=>!t.income).reduce((s,t)=>s+t.amt,0);
+/* ================== HELPERS ================== */
+const $ = (s,el=document)=>el.querySelector(s);
+const $$ = (s,el=document)=>[...el.querySelectorAll(s)];
+const fmt = n => '₹' + n.toLocaleString('en-IN');
+
+function animateNumber(el, target, duration=1200, prefix='', suffix='') {
+  const start = parseInt(el.textContent.replace(/[^\d-]/g,'')) || 0;
+  const startTime = performance.now();
+  function step(now) {
+    const p = Math.min((now-startTime)/duration, 1);
+    const eased = 1 - Math.pow(1-p, 3);
+    el.textContent = prefix + Math.round(start + (target-start)*eased).toLocaleString('en-IN') + suffix;
+    if (p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+
+function animateArc(arc, pct, circumf) {
+  const offset = circumf - (circumf * Math.min(pct,100) / 100);
+  arc.style.transition = 'stroke-dashoffset 1.4s cubic-bezier(.4,0,.2,1)';
+  arc.setAttribute('stroke-dashoffset', offset);
+}
+
+/* ================== MODULES ================== */
+function renderModules() {
+  const wrap = $('#module-cards');
+  wrap.innerHTML = MODULES.map(m => `
+    <a href="#app" data-module="${m.id}" class="module-card bg-paper2 rounded-2xl shadow-card p-6 cursor-pointer block">
+      <div class="w-11 h-11 rounded-xl bg-${m.color}/10 flex items-center justify-center">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="text-${m.color}">${ICONS[m.icon]}</svg>
+      </div>
+      <h3 class="font-display font-600 text-lg mt-4">${m.title}</h3>
+      <p class="text-sm text-muted mt-1 leading-relaxed">${m.desc}</p>
+      <div class="flex items-center gap-1 text-xs font-semibold text-${m.color} mt-4">
+        Try it <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M13 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+    </a>
+  `).join('');
+  $$('[data-module]').forEach(el => el.addEventListener('click', () => switchPanel(el.dataset.module)));
+}
+
+/* ================== NAV ================== */
+function renderNav() {
+  const items = MODULES.map(m => ({
+    id: m.id, label: m.title, icon: m.icon, color: m.color
+  }));
+  const makePill = (m, mobile=false) => `
+    <button data-nav="${m.id}" class="nav-pill flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium text-inktext" data-active="${state.activePanel===m.id}">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="nav-ic text-${m.color}">${ICONS[m.icon]}</svg>
+      <span>${m.label}</span>    </button>`;
+  $('#desktop-nav').innerHTML = items.map(m=>makePill(m)).join('');
+  $('#mobile-nav').innerHTML = items.map(m=>makePill(m,true)).join('');
+  $$('[data-nav]').forEach(b => b.addEventListener('click', () => switchPanel(b.dataset.nav)));
+}
+
+function switchPanel(id) {
+  state.activePanel = id;
+  $$('[data-nav]').forEach(b => b.setAttribute('data-active', b.dataset.nav===id));
+  $$('[id^="panel-"]').forEach(p => p.classList.add('hidden'));
+  const panel = $('#panel-'+id);
+  if (panel) { panel.classList.remove('hidden'); panel.style.animation='none'; panel.offsetHeight; panel.style.animation=''; }
+  if (id==='dashboard') { drawSpendChart(); animateDashboard(); }
+  if (id==='credit') { renderCredit(); }
+  if (id==='budget') { renderBudget(); }
+  if (id==='goals') { renderGoals(); }
+  if (id==='advisor') { initChat(); }
+  if (id==='scamshield') { renderScamSamples(); }
+}
+
+/* ================== DASHBOARD ================== */
+let spendChart;
+function drawSpendChart() {
+  const ctx = $('#chart-spend');
+  if (!ctx) return;
+  if (spendChart) spendChart.destroy();
+  const days = Array.from({length:14}, (_,i)=>`Jun ${i+3}`);
+  const data = [0, 2200, 3800, 5100, 7400, 9200, 10800, 14500, 17200, 21000, 25400, 29800, 34200, state.spent];
+  spendChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: days,
+      datasets: [{
+        label: 'Cumulative spend',
+        data: data,
+        borderColor: '#FF6B5E',
+        backgroundColor: 'rgba(255,107,94,0.12)',
+        fill: true,
+        tension: 0.4,
+        borderWidth: 2.5,
+        pointRadius: 0,
+        pointHoverRadius: 5,
+        pointHoverBackgroundColor: '#FF6B5E',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend:{display:false}, tooltip:{
+        backgroundColor:'#0F2622', padding:12, titleFont:{family:'Space Grotesk'}, bodyFont:{family:'IBM Plex Mono'},        callbacks:{ label: ctx => fmt(ctx.parsed.y) }
+      }},
+      scales: {
+        x: { grid:{display:false}, ticks:{color:'#5B6F68', font:{size:10}} },
+        y: { grid:{color:'rgba(0,0,0,0.04)'}, ticks:{color:'#5B6F68', font:{size:10}, callback:v=>'₹'+(v/1000)+'k'} }
+      }
+    }
+  });
+}
+
+function animateDashboard() {
+  animateNumber($('#dash-spent'), state.spent, 1400, '₹');
+  animateNumber($('#hero-gauge-num'), state.guardScore, 1600);
+  animateNumber($('#gauge-health-num'), state.guardScore, 1600);
+  animateArc($('#hero-gauge-arc'), state.guardScore, 540);
+  animateArc($('#gauge-health-arc'), state.guardScore, 314);
+  renderTxns();
+  // emergency fund
+  const pct = 61.5;
+  setTimeout(()=>{
+    $('#emergency-bar').style.width = pct+'%';
+    animateNumber($('#emergency-saved'), 184500, 1400);
+    $('#emergency-pct').textContent = pct;
+  }, 200);
+}
+
+function renderTxns() {
+  const list = $('#txn-list');
+  list.innerHTML = TXNS.map(t => `
+    <div class="flex items-center gap-3 py-3">
+      <div class="w-10 h-10 rounded-full bg-paper flex items-center justify-center text-lg shrink-0">${t.icon}</div>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-semibold truncate">${t.name}</p>
+        <p class="text-xs text-muted">${t.cat} · ${t.time}</p>
+      </div>
+      <p class="font-mono text-sm font-semibold ${t.income?'text-mintdark':'text-inktext'}">${t.income?'+':'-'}${fmt(t.amt)}</p>
+    </div>
+  `).join('');
+}
+
+/* ================== AFFORDABILITY ================== */
+function checkAffordability(amt) {
+  const available = state.income - state.spent;
+  const ratio = amt / state.income;
+  const result = $('#afford-result');
+  result.classList.remove('hidden');
+  let verdict, color, emoji, advice;
+  if (ratio < 0.15) {
+    verdict = 'Yes, comfortably'; color = 'mint'; emoji = '✅';
+    advice = `This is ${Math.round(ratio*100)}% of your monthly income. You'll still have ${fmt(available-amt)} left after.`;  } else if (ratio < 0.35) {
+    verdict = 'Yes, but plan it'; color = 'saffron'; emoji = '⚠️';
+    advice = `This is ${Math.round(ratio*100)}% of your income. Consider splitting into 2 months or waiting for next paycheck.`;
+  } else if (ratio < 0.6) {
+    verdict = 'Risky — wait'; color = 'coral'; emoji = '🚧';
+    advice = `This would eat ${Math.round(ratio*100)}% of your monthly income. Try waiting 1-2 months or using EMI.`;
+  } else {
+    verdict = 'Not right now'; color = 'coral'; emoji = '🛑';
+    advice = `This is more than half your monthly income. It would disrupt your savings goals.`;
+  }
+  result.innerHTML = `
+    <div class="flex items-start gap-3">
+      <span class="text-2xl">${emoji}</span>
+      <div class="flex-1">
+        <p class="font-display font-600 text-white text-lg">${verdict}</p>
+        <p class="text-white/70 text-sm mt-1 leading-relaxed">${advice}</p>
+        <div class="grid grid-cols-3 gap-3 mt-4 text-xs font-mono">
+          <div class="bg-white/5 rounded-lg p-2.5"><p class="text-white/50">Available</p><p class="text-white font-semibold mt-0.5">${fmt(available)}</p></div>
+          <div class="bg-white/5 rounded-lg p-2.5"><p class="text-white/50">Cost</p><p class="text-white font-semibold mt-0.5">${fmt(amt)}</p></div>
+          <div class="bg-white/5 rounded-lg p-2.5"><p class="text-white/50">After</p><p class="text-${color} font-semibold mt-0.5">${fmt(available-amt)}</p></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+$('#afford-btn').addEventListener('click', () => {
+  const val = $('#afford-input').value;
+  const match = val.match(/(\d{2,6})/);
+  if (match) checkAffordability(parseInt(match[1]));
+  else checkAffordability(10000);
+});
+$('#afford-input').addEventListener('keypress', e => { if (e.key==='Enter') $('#afford-btn').click(); });
+$$('.afford-chip').forEach(c => c.addEventListener('click', () => checkAffordability(parseInt(c.dataset.amt))));
+
+/* ================== SCAM SHIELD ================== */
+function renderScamSamples() {
+  const wrap = $('#scam-samples');
+  wrap.innerHTML = SCAM_SAMPLES.map((s,i) => `<button data-sample="${i}" class="chip text-xs text-muted border border-black/10 rounded-full px-3 py-1.5">Try sample ${i+1}</button>`).join('');
+  $$('[data-sample]').forEach(b => b.addEventListener('click', () => {
+    $('#scam-input').value = SCAM_SAMPLES[parseInt(b.dataset.sample)];
+  }));
+}
+
+function analyseScam(text) {
+  const t = text.toLowerCase();
+  let score = 0;
+  const flags = [];
+  const checks = [
+    { re:/urgent|immediately|now|act fast|expires/i, w:25, f:'Urgency pressure' },    { re:/click|http|https|link|bit\.ly/i, w:20, f:'Suspicious link' },
+    { re:/won|lottery|prize|congratulations|reward/i, w:30, f:'Too-good-to-be-true reward' },
+    { re:/blocked|frozen|suspended|kyc pending/i, w:25, f:'Account threat' },
+    { re:/send money|pay now|transfer|upi pin|otp/i, w:25, f:'Money request' },
+    { re:/sbi|hdfc|icici|axis|bank/i, w:10, f:'Bank name used' },
+    { re:/\+91|\b\d{10}\b/, w:15, f:'Phone number included' },
+    { re:/dear (friend|customer|user)|hi mom|hi dad/i, w:20, f:'Generic / impersonation greeting' },
+  ];
+  checks.forEach(c => { if (c.re.test(t)) { score += c.w; flags.push(c.f); } });
+  score = Math.min(98, score);
+  let level, color, advice;
+  if (score >= 70) { level='HIGH RISK — likely a scam'; color='coral'; advice='Do not click any links or share personal info. Block the sender and report to 1930 (national cybercrime helpline).'; }
+  else if (score >= 40) { level='MEDIUM RISK — be cautious'; color='saffron'; advice='Verify independently. Call the organisation on their official number — never use numbers in the message.'; }
+  else { level='LOW RISK — likely safe'; color='mint'; advice='Looks legitimate, but still verify the sender before sharing any sensitive info.'; }
+  return { score, level, color, advice, flags };
+}
+
+$('#scam-btn').addEventListener('click', () => {
+  const text = $('#scam-input').value.trim();
+  if (!text) return;
+  const r = analyseScam(text);
+  const res = $('#scam-result');
+  res.classList.remove('hidden');
+  res.innerHTML = `
+    <div class="flex items-start gap-4">
+      <div class="w-14 h-14 rounded-xl bg-${r.color}/10 flex items-center justify-center shrink-0">
+        <span class="font-display font-700 text-2xl text-${r.color}">${r.score}</span>
+      </div>
+      <div class="flex-1">
+        <p class="font-display font-600 text-lg">${r.level}</p>
+        <div class="mt-2 h-2 rounded-full bg-black/5 overflow-hidden">
+          <div class="risk-bar h-full bg-${r.color}" style="width:0%"></div>
+        </div>
+        <p class="text-sm text-muted mt-3 leading-relaxed">${r.advice}</p>
+        ${r.flags.length ? `<div class="flex flex-wrap gap-2 mt-3">${r.flags.map(f=>`<span class="text-xs bg-${r.color}/10 text-${r.color} px-2.5 py-1 rounded-full font-medium">${f}</span>`).join('')}</div>` : ''}
+      </div>
+    </div>
+  `;
+  setTimeout(()=>{ const bar = $('.risk-bar', res); if (bar) bar.style.width = r.score+'%'; }, 100);
+});
+
+/* ================== CHAT ADVISOR ================== */
+let chatInited = false;
+function initChat() {
+  const log = $('#chat-log');
+  const sugg = $('#chat-suggestions');
+  if (!chatInited) {
+    log.innerHTML = `
+      <div class="flex gap-3">
+        <div class="w-8 h-8 rounded-full bg-ink flex items-center justify-center shrink-0">          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2.5 L19.5 5.5 V11.2 C19.5 16 16 19.6 12 21 C8 19.6 4.5 16 4.5 11.2 V5.5 Z" fill="#4FD9A4"/></svg>
+        </div>
+        <div class="msg-bot px-4 py-3 max-w-[85%]">
+          <p class="text-sm leading-relaxed">Hi Aditi 👋 I can see your June numbers. You've spent ₹${state.spent.toLocaleString('en-IN')} of ₹65,000 so far. What would you like to know?</p>
+        </div>
+      </div>
+    `;
+    const suggestions = ['How much can I spend this week?','Should I buy the iPhone?','Am I saving enough?','Where am I overspending?'];
+    sugg.innerHTML = suggestions.map(s=>`<button data-sugg="${s}" class="text-xs bg-paper border border-black/10 rounded-full px-3 py-1.5 hover:bg-ink hover:text-white transition-colors">${s}</button>`).join('');
+    $$('[data-sugg]').forEach(b => b.addEventListener('click', () => sendChat(b.dataset.sugg)));
+    chatInited = true;
+  }
+}
+
+function addChatMsg(text, who) {
+  const log = $('#chat-log');
+  const div = document.createElement('div');
+  div.className = 'flex gap-3 ' + (who==='user' ? 'justify-end' : '');
+  if (who==='user') {
+    div.innerHTML = `<div class="msg-user px-4 py-3 max-w-[85%]"><p class="text-sm leading-relaxed">${text}</p></div>`;
+  } else {
+    div.innerHTML = `
+      <div class="w-8 h-8 rounded-full bg-ink flex items-center justify-center shrink-0">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2.5 L19.5 5.5 V11.2 C19.5 16 16 19.6 12 21 C8 19.6 4.5 16 4.5 11.2 V5.5 Z" fill="#4FD9A4"/></svg>
+      </div>
+      <div class="msg-bot px-4 py-3 max-w-[85%]"><div class="text-sm leading-relaxed">${text}</div></div>
+    `;
+  }
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  const log = $('#chat-log');
+  const div = document.createElement('div');
+  div.className = 'flex gap-3';
+  div.id = 'typing-indicator';
+  div.innerHTML = `
+    <div class="w-8 h-8 rounded-full bg-ink flex items-center justify-center shrink-0">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><path d="M12 2.5 L19.5 5.5 V11.2 C19.5 16 16 19.6 12 21 C8 19.6 4.5 16 4.5 11.2 V5.5 Z" fill="#4FD9A4"/></svg>
+    </div>
+    <div class="msg-bot px-4 py-3 flex gap-1.5 items-center">
+      <span class="typing-dot w-2 h-2 rounded-full bg-muted"></span>
+      <span class="typing-dot w-2 h-2 rounded-full bg-muted"></span>
+      <span class="typing-dot w-2 h-2 rounded-full bg-muted"></span>
+    </div>
+  `;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;}
+
+function chatResponse(q) {
+  const t = q.toLowerCase();
+  const available = state.income - state.spent;
+  const daysLeft = 17;
+  const dailyBudget = Math.round(available / daysLeft);
+  if (/spend|budget|week|daily/.test(t)) {
+    return `<p>You have <b>${fmt(available)}</b> left for the rest of June (17 days).</p>
+    <p class="mt-2">That's about <b class="text-mintdark">${fmt(dailyBudget)}/day</b>. Stay under this and you'll end the month with savings intact.</p>
+    <p class="mt-2 text-xs text-muted">💡 Tip: Your food spend is 22% above your usual June average.</p>`;
+  }
+  if (/iphone|phone|laptop|buy|afford|purchase/.test(t)) {
+    return `<p>Depends on the price! Based on your current spending:</p>
+    <ul class="list-disc pl-5 mt-2 space-y-1">
+      <li>Under ₹5,000 — go ahead, you have room</li>
+      <li>₹5,000–₹15,000 — wait for next paycheck</li>
+      <li>Above ₹15,000 — consider EMI or saving first</li>
+    </ul>
+    <p class="mt-2">What's the price? I'll give you a specific answer.</p>`;
+  }
+  if (/saving|save|sip|emergency/.test(t)) {
+    return `<p>You're doing well! Here's the snapshot:</p>
+    <ul class="list-disc pl-5 mt-2 space-y-1">
+      <li>Emergency fund: <b>₹1,84,500</b> of ₹3,00,000 (61.5%)</li>
+      <li>Monthly SIP: <b>₹4,500</b> — on track</li>
+      <li>Savings rate this month: <b>~11%</b> (healthy is 20%+)</li>
+    </ul>
+    <p class="mt-2">Bumping your SIP by just ₹500 gets you to your emergency goal 3 months sooner. Want me to show how?</p>`;
+  }
+  if (/overspend|over|category|where/.test(t)) {
+    return `<p>Looking at your June so far, here's where you're above budget:</p>
+    <ul class="list-disc pl-5 mt-2 space-y-1">
+      <li><b>Food</b> — ₹9,200 vs ₹8,000 budget (+15%)</li>
+      <li><b>Shopping</b> — ₹3,299 vs planned ₹0 this early</li>
+    </ul>
+    <p class="mt-2">Your housing, transport and utilities are all under control. A small cut in Swiggy orders this week gets you back on track.</p>`;
+  }
+  if (/scam|safe|message|sms/.test(t)) {
+    return `<p>Head over to <b>ScamShield</b> (in the sidebar) — paste any message and I'll score the risk in seconds.</p>
+    <p class="mt-2">Quick rule of thumb: if it creates urgency + asks for money/info + has a link, treat it as suspicious.</p>`;
+  }
+  if (/hi|hello|hey/.test(t)) {
+    return `<p>Hey Aditi! 👋 How can I help with your money today?</p>`;
+  }
+  return `<p>Good question. Based on your June data, you've spent ${fmt(state.spent)} of ${fmt(state.income)}.</p>
+  <p class="mt-2">Could you tell me more? I can help with:</p>
+  <ul class="list-disc pl-5 mt-2 space-y-1">
+    <li>Budget & daily spend limits</li>
+    <li>Purchase affordability</li>    <li>Savings & SIP advice</li>
+    <li>Category-wise analysis</li>
+  </ul>`;
+}
+
+function sendChat(text) {
+  if (!text.trim()) return;
+  addChatMsg(text, 'user');
+  $('#chat-input').value = '';
+  addTyping();
+  setTimeout(() => {
+    const t = $('#typing-indicator'); if (t) t.remove();
+    addChatMsg(chatResponse(text), 'bot');
+  }, 900 + Math.random()*600);
+}
+
+$('#chat-send').addEventListener('click', () => sendChat($('#chat-input').value));
+$('#chat-input').addEventListener('keypress', e => { if (e.key==='Enter') sendChat($('#chat-input').value); });
+$('#chat-clear').addEventListener('click', () => { chatInited = false; $('#chat-log').innerHTML=''; $('#chat-suggestions').innerHTML=''; initChat(); });
+
+/* ================== CREDIT SCORE ================== */
+function renderCredit() {
+  const wrap = $('#credit-sliders');
+  wrap.innerHTML = CREDIT_FACTORS.map(f => `
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-sm font-medium">${f.label}</label>
+        <span class="font-mono text-sm text-teal"><span data-out="${f.key}">${f.val}</span> ${f.unit}</span>
+      </div>
+      <input type="range" min="0" max="${f.max}" value="${f.val}" data-slider="${f.key}" style="--fill:${(f.val/f.max)*100}%">
+    </div>
+  `).join('');
+  $$('[data-slider]').forEach(s => {
+    s.addEventListener('input', () => {
+      const k = s.dataset.slider;
+      const f = CREDIT_FACTORS.find(x=>x.key===k);
+      f.val = parseInt(s.value);
+      $(`[data-out="${k}"]`).textContent = f.val;
+      s.style.setProperty('--fill', (f.val/f.max)*100 + '%');
+      calcCredit();
+    });
+  });
+  calcCredit();
+}
+
+function calcCredit() {
+  // weighted score
+  const weights = { rent:0.25, util:0.25, sip:0.15, age:0.15, emi:0.20 };
+  let score = 0;
+  CREDIT_FACTORS.forEach(f => {    let pct = f.val / f.max;
+    if (f.invert) pct = 1 - pct; // lower util = better
+    score += pct * weights[f.key] * 100;
+  });
+  score = Math.round(300 + score * 5.5); // 300-900 range
+  score = Math.max(300, Math.min(900, score));
+  state.creditScore = score;
+  animateNumber($('#credit-num'), score, 800);
+  animateArc($('#credit-arc'), (score-300)/6, 377);
+  let label = 'Building', color = 'muted';
+  if (score >= 750) { label = 'Excellent'; color = 'mintdark'; }
+  else if (score >= 680) { label = 'Good'; color = 'mintdark'; }
+  else if (score >= 600) { label = 'Fair'; color = 'saffrondark'; }
+  else if (score >= 450) { label = 'Needs work'; color = 'coral'; }
+  $('#credit-label').textContent = label;
+  $('#credit-label').className = `text-sm font-semibold mt-3 text-${color}`;
+}
+
+/* ================== BUDGET ================== */
+let budgetChart;
+function renderBudget() {
+  const total = state.budget.reduce((s,b)=>s+b.amt,0);
+  const list = $('#budget-list');
+  list.innerHTML = state.budget.map((b,i) => {
+    const pct = (b.amt/total*100).toFixed(0);
+    return `
+      <div>
+        <div class="flex items-center justify-between mb-1.5">
+          <div class="flex items-center gap-2">
+            <span class="w-3 h-3 rounded-full" style="background:${b.color}"></span>
+            <span class="text-sm font-medium">${b.cat}</span>
+          </div>
+          <span class="font-mono text-sm">${fmt(b.amt)} <span class="text-muted text-xs">· ${pct}%</span></span>
+        </div>
+        <input type="range" min="0" max="30000" step="500" value="${b.amt}" data-budget="${i}" style="--fill:${(b.amt/30000)*100}%">
+      </div>
+    `;
+  }).join('');
+  $$('[data-budget]').forEach(s => s.addEventListener('input', () => {
+    state.budget[parseInt(s.dataset.budget)].amt = parseInt(s.value);
+    s.style.setProperty('--fill', (parseInt(s.value)/30000)*100 + '%');
+    renderBudget();
+  }));
+  const sum = $('#budget-summary');
+  const diff = state.income - total;
+  sum.innerHTML = `
+    <div>
+      <p class="text-xs text-muted">Total allocated</p>
+      <p class="font-display font-700 text-xl">${fmt(total)} <span class="text-muted text-sm font-normal">of ${fmt(state.income)}</span></p>
+    </div>    <div class="text-right">
+      <p class="text-xs text-muted">Unallocated</p>
+      <p class="font-display font-700 text-xl ${diff>=0?'text-mintdark':'text-coral'}">${diff>=0?'+':''}${fmt(diff)}</p>
+    </div>
+  `;
+  drawBudgetChart();
+}
+
+function drawBudgetChart() {
+  const ctx = $('#chart-budget');
+  if (!ctx) return;
+  if (budgetChart) budgetChart.destroy();
+  budgetChart = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: state.budget.map(b=>b.cat),
+      datasets: [{
+        data: state.budget.map(b=>b.amt),
+        backgroundColor: state.budget.map(b=>b.color),
+        borderWidth: 0,
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: false,
+      cutout: '65%',
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor:'#0F2622', padding:12,
+          callbacks:{ label: ctx => ctx.label + ': ' + fmt(ctx.parsed) }
+        }
+      }
+    }
+  });
+}
+
+$('#budget-reset').addEventListener('click', () => {
+  state.budget = JSON.parse(JSON.stringify(DEFAULT_BUDGET));
+  renderBudget();
+});
+
+/* ================== GOALS ================== */
+function renderGoals() {
+  const list = $('#goals-list');
+  list.innerHTML = state.goals.map((g,i) => {
+    const pct = Math.round(g.saved/g.target*100);
+    return `
+      <div class="bg-paper2 rounded-2xl shadow-card p-6">
+        <div class="flex items-start justify-between">          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl bg-${g.color}/10 flex items-center justify-center text-xl">${g.icon}</div>
+            <div>
+              <p class="font-display font-600">${g.name}</p>
+              <p class="text-xs text-muted">Target: ${fmt(g.target)}</p>
+            </div>
+          </div>
+          <button data-del="${i}" class="text-muted hover:text-coral transition-colors" aria-label="Delete">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="mt-5">
+          <div class="flex items-end justify-between mb-2">
+            <p class="font-display font-700 text-2xl">${fmt(g.saved)}</p>
+            <p class="font-mono text-sm text-${g.color} font-semibold">${pct}%</p>
+          </div>
+          <div class="h-2 rounded-full bg-black/5 overflow-hidden">
+            <div class="h-full rounded-full risk-bar" style="background:${g.color}; width:${pct}%"></div>
+          </div>
+          <p class="text-xs text-muted mt-2">Need ${fmt(g.target - g.saved)} more</p>
+        </div>
+        <div class="mt-4 flex gap-2">
+          <button data-add="${i}" class="flex-1 text-xs font-semibold bg-${g.color}/10 text-${g.color.replace('dark','')} hover:bg-${g.color} hover:text-white transition-colors rounded-lg py-2">+ Add ₹1,000</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+  $$('[data-del]').forEach(b => b.addEventListener('click', () => {
+    state.goals.splice(parseInt(b.dataset.del), 1); renderGoals();
+  }));
+  $$('[data-add]').forEach(b => b.addEventListener('click', () => {
+    const g = state.goals[parseInt(b.dataset.add)];
+    g.saved = Math.min(g.target, g.saved + 1000);
+    renderGoals();
+  }));
+}
+
+$('#add-goal-btn').addEventListener('click', () => {
+  const name = prompt('Goal name?');
+  if (!name) return;
+  const target = parseInt(prompt('Target amount (₹)?'));
+  if (!target) return;
+  state.goals.push({ name, target, saved:0, color:'saffron', icon:'🎯' });
+  renderGoals();
+});
+
+/* ================== HERO ANIMATION ================== */
+function animateHero() {
+  setTimeout(() => {
+    animateNumber($('#hero-gauge-num'), state.guardScore, 1800);    animateArc($('#hero-gauge-arc'), state.guardScore, 540);
+  }, 300);
+}
+
+/* ================== MOBILE MENU ================== */
+$('#mobile-menu-btn').addEventListener('click', () => {
+  $('#mobile-menu').classList.toggle('hidden');
+});
+$$('#mobile-menu a').forEach(a => a.addEventListener('click', () => $('#mobile-menu').classList.add('hidden')));
+
+/* ================== INIT ================== */
+renderModules();
+renderNav();
+renderScamSamples();
+animateHero();
+
+// Intersection observer for panel animations
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      if (e.target.id === 'panel-dashboard') { drawSpendChart(); animateDashboard(); }
+    }
+  });
+}, { threshold: 0.1 });
+$$('[id^="panel-"]').forEach(p => io.observe(p));
+
+// Initial render for dashboard
+setTimeout(() => { drawSpendChart(); animateDashboard(); }, 400);
+</script>
+</body>
+</html>
